@@ -1,0 +1,28 @@
+{
+  "mysql": {
+    "host": "",
+    "user": "",
+    "password": "",
+    "database" : ""
+  },
+  "discord": {
+    "token": "",
+    "prefix": "!",
+    "ownerID": "",
+    "presence":{
+      "name": "Project Athena Bot",
+      "type": "STREAMING",
+      "url": "https://www.youtube.com/watch?v=FeohkopWEn4"
+    },
+    "live":{
+      "channel":{
+        "events":"663469227683872787"
+      }
+    },
+    "dev":{
+      "channel":{
+        "events":""
+      }
+    }
+  }
+}

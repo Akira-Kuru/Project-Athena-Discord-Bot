@@ -1,0 +1,184 @@
+const fs            = require('fs');
+const config        = require('./config.json');
+const con           = require('./db.js');
+const Discord       = require('discord.js');
+const client        = new Discord.Client();
+client.commands     = new Discord.Collection();
+const cooldowns     = new Discord.Collection();
+const commandFiles  = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+const schedule      = require('node-schedule');
+const moment        = require('moment');
+const momentZone    = require('moment-timezone');
+
+
+
+
+for (const file of commandFiles) {
+	const command = require(`./commands/${file}`);
+
+	// set a new item in the Collection
+	// with the key as the command name and the value as the exported module
+	client.commands.set(command.name, command);
+}
+
+client.on('ready', () => {
+    console.log(`Logged in as ${client.user.tag}!`);
+    client.user.setStatus('available');
+    client.user.setPresence({
+        game: {
+            name: 'Project Athena Bot',
+            type: "STREAMING",
+            url: "https://www.youtube.com/watch?v=FeohkopWEn4"
+        }
+    });
+});
+
+client.on("message",(message) => {
+    if (!message.content.startsWith(config.discord.prefix) || message.author.bot) return;
+
+	const args = message.content.slice(config.discord.prefix.length).split(/ +/);
+	const commandName = args.shift().toLowerCase();
+
+	const command = client.commands.get(commandName)
+		|| client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
+
+	if (!command) return;
+
+	if (command.guildOnly && message.channel.type !== 'text') {
+		return message.reply('I can\'t execute that command inside DMs!');
+	}
+
+	if (command.args && !args.length) {
+		let reply = `You didn't provide any arguments, ${message.author}!`;
+
+		if (command.usage) {
+			reply += `\nThe proper usage would be: \`${config.discord.prefix}${command.name} ${command.usage}\``;
+		}
+
+		return message.channel.send(reply);
+	}
+
+	if (!cooldowns.has(command.name)) {
+		cooldowns.set(command.name, new Discord.Collection());
+	}
+    
+    const now = Date.now();
+    const timestamps = cooldowns.get(command.name);
+    const cooldownAmount = (command.cooldown || 3) * 1000;
+    
+    if (timestamps.has(message.author.id)) {
+        const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
+
+        if (now < expirationTime) {
+            const timeLeft = (expirationTime - now) / 1000;
+            return message.reply(`please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${command.name}\` command.`);
+        }
+    }
+
+    timestamps.set(message.author.id, now);
+	setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
+
+    try {
+        command.execute(message, args);
+    } catch (error) {
+        console.error(error);
+        message.reply('there was an error trying to execute that command!');
+    }
+});
+
+
+// schedule.scheduleJob('0 0 * * *', () => {
+//     const dayNow        = moment().format('dddd');
+//     const dateNow       = moment().format("YYYY-MM-DD HH:mm:ss");
+//     const timeNow       = moment().tz('America/Los_Angeles').format('ha z');
+
+//     con.query("SELECT * FROM pa_events WHERE date='"+ dayNow+"' OR date='"+dateNow+"'", function (err, result) {
+//         if (err) throw err;
+//         result.forEach(element => {
+//             console.log(element);
+            
+//             schedule.scheduleJob({hour:element.time}, function(){
+//                 console.log(element);
+//                 const eventEmbed = new Discord.RichEmbed()
+//                         .setColor('#0099ff')
+//                         .setTitle('#'+element.id+' '+element.title)
+//                         .addField('Date',element.date,true)
+//                         .addField('Time',element.time,true)
+//                         .addField('Location',element.location,true);
+//                 client.channels.get('671028749113753639').send(eventEmbed);
+//             });
+//         });
+//     });
+// });
+
+
+console.log(schedule);
+schedule.scheduleJob('10 * * * * *', () => {
+    const dayNow        = moment().format('dddd');
+    const dateNow       = moment().format("YYYY-MM-DD HH:mm:ss");
+    const timeNow       = moment().tz('America/Los_Angeles').format('ha z');
+    console.log(dateNow);
+
+    con.query("SELECT * FROM pa_events WHERE date='Tuesday'", function (err, result) {
+        if (err) throw err;
+        result.forEach(element => {
+		console.log(schedule);
+            var rule = new schedule.RecurrenceRule();
+
+            rule.hour = 0;
+            rule.minute = 0;
+            rule.second = 10;
+           schedule.scheduleJob('10 * * * * *', function(){
+                console.log(dateNow);
+                console.log(element);
+                const eventEmbed = new Discord.RichEmbed()
+                        .setColor('#0099ff')
+                        .setTitle('#'+element.id+' '+element.title)
+                        .addField('Date',element.date,true)
+                        .addField('Time',element.time,true)
+                        .addField('Location',element.location,true);
+                client.channels.get('671028749113753639').send(eventEmbed);
+            });
+        });
+    });
+ });
+
+
+// const dayNow        = moment().format('dddd');
+// const dateNow       = moment().format("YYYY-MM-DD HH:mm:ss");
+// const timeNow       = moment().tz('America/Los_Angeles').format('ha z');
+
+
+
+// console.log(dayNow);
+// console.log(dateNow);
+// console.log(timeNow);
+
+
+// schedule.scheduleJob('53 * * * *', function(){
+//     checkDay(dayNow);
+//     checkDate(dateNow);
+//     checkTime(timeNow);
+// });
+
+
+
+// function checkDay(dayNow){
+//     console.log(dayNow);
+// }
+
+// function checkDate(dateNow){
+//     console.log(dateNow);
+// }
+
+// function checkTime(timeNow){
+//     console.log(timeNow);
+// }
+
+
+
+// client.channels.get(channelID).send('My Message');
+
+
+client.login(config.discord.token);
+module.exports = client
