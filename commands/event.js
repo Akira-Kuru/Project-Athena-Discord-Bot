@@ -6,7 +6,7 @@ var momentZone      = require('moment-timezone');
 
 module.exports = {
 	name: 'event',
-    description: 'Assigning, Creating, Deleting, Pospone',
+    description: 'Creating Assigning, Creating, Deleting, Pospone',
     cooldown: 5,
     args: true,
     usage: '<command> <title> <day/date> <time> <location>',
@@ -61,7 +61,7 @@ module.exports = {
             if(args[1] !== undefined){
                 con.query("SELECT * FROM pa_events WHERE id="+args[1], function (err, result) {
                     if (err) throw err;
-                    console.log(result);
+                    // console.log(result);
                     if(result.length > 0 ){
                         result.forEach(element => {
                             // console.log(element.creator_id)
@@ -97,25 +97,51 @@ module.exports = {
                 con.query("SELECT * FROM pa_events", function (err, results, fields) {
                     if (err) throw err;
                     results.forEach(element => {
+
+                        var time = element.time;
+                        var res = time.split(" ");
+                        var date = moment().format("YYYY-MM-DD").toString();
+                        var dt = moment(res[0], ["hA"]).format("HH");
+
+                        var utcTime = momentZone.utc(date+' '+dt);
+                        var usTime = momentZone(utcTime).tz('America/Los_Angeles').format('ha z');
+                        var euTime = momentZone(utcTime).tz("Europe/Paris").format('HH:mm z');
+                        utcTime = utcTime.format('ha z');
+
                         const eventEmbed = new Discord.RichEmbed()
                         .setColor('#0099ff')
                         .setTitle('#'+element.id+' '+element.title)
+                        .addField('Universal Time',utcTime,true)
+                        .addField('United States',usTime,true)
+                        .addField('Europe',euTime,true)
                         .addField('Date',element.date,true)
-                        .addField('Time',element.time,true)
                         .addField('Location',element.location,true)
                         message.channel.send(eventEmbed);
                     });
-                    console.log(args[1]);
+                    // console.log(args[1]);
                 });
             }else{
                 con.query("SELECT * FROM pa_events WHERE id="+args[1], function (err, results, fields) {
                     if (err) throw err;
                     results.forEach(element => {
+
+                        var time = element.time;
+                        var res = time.split(" ");
+                        var date = moment().format("YYYY-MM-DD").toString();
+                        var dt = moment(res[0], ["hA"]).format("HH");
+
+                        var utcTime = momentZone.utc(date+' '+dt);
+                        var usTime = momentZone(utcTime).tz('America/Los_Angeles').format('ha z');
+                        var euTime = momentZone(utcTime).tz("Europe/Paris").format('HH:mm z');
+                        utcTime = utcTime.format('ha z');
+
                         const eventEmbed = new Discord.RichEmbed()
                         .setColor('#0099ff')
                         .setTitle('#'+element.id+' '+element.title)
+                        .addField('Universal Time',utcTime,true)
+                        .addField('United States',usTime,true)
+                        .addField('Europe',euTime,true)
                         .addField('Date',element.date,true)
-                        .addField('Time',element.time,true)
                         .addField('Location',element.location,true)
                         message.channel.send(eventEmbed);
                     });
@@ -123,11 +149,11 @@ module.exports = {
             }
         }else if(args[0] === 'sub'){
             if(args[1] === undefined){
-                message.channel.send('You need to specify which id of the event you want to subscribe too.');
+                message.channel.send('You need to specify which id of the event you wish to subscribe too.').then(r => r.delete(300000));
             }else{
                 con.query("SELECT * FROM pa_subs WHERE id='"+args[1]+"'", function (err, result) {
                     if (err) throw err;
-                    console.log(result);
+                    // console.log(result);
                     if(!result.length){
                         con.query("INSERT INTO pa_subs (user_id) VALUES ('"+message.author.id+"')", function (err, result) {
                             if (err) throw err;
@@ -135,17 +161,43 @@ module.exports = {
                                 if (err) throw err;
                             });
                         });
-                        return message.channel.send('Event was subscribed. You will notified over DMs');
+                        return message.channel.send('Subscribed to event. You will notified over DMs').then(r => r.delete(300000));
                     }else{
                         result.forEach(element => {
                             con.query("INSERT INTO pa_events_subs (events_id, subs_id) VALUES ('"+args[1]+"', '"+element.user_id+"')", function (err, result) {
                                 if (err) throw err;
                             });
-                            return message.channel.send('Event was subscribed. You will notified over DMs');
+                            return message.channel.send('Subscribed to event. You will notified over DMs').then(r => r.delete(300000));
                         });
                     }
                 });
             }
+        // }else if(args[0] === 'unsub'){
+        //     if(args[1] === undefined){
+        //         message.channel.send('You need to specify which id of the event you wish to unsubscribe too.').then(r => r.delete(300000));
+        //     }else{
+        //         con.query("SELECT * FROM pa_subs WHERE id='"+args[1]+"'", function (err, result) {
+        //             if (err) throw err;
+        //             // console.log(result);
+        //             if(!result.length){
+        //                 con.query("DELETE FROM pa_events_subs LEFT JOIN pa_subs WHERE events_id='"+args[1]+"' AND user_id='"+message.author.id+"'", function (err, result) {
+        //                     if (err) throw err;
+        //                     // con.query("DELETE FROM pa_events_subs (events_id, subs_id) VALUES ('"+args[1]+"', LAST_INSERT_ID())", function (err, result) {
+        //                     //     if (err) throw err;
+        //                     // });
+        //                 });
+        //                 return message.channel.send('You have been successfully unsubcribed.').then(r => r.delete(300000));
+        //             }else{
+        //                 result.forEach(element => {
+        //                     con.query("INSERT INTO pa_events_subs (events_id, subs_id) VALUES ('"+args[1]+"', '"+element.user_id+"')", function (err, result) {
+        //                         if (err) throw err;
+        //                     });
+        //                     return message.channel.send('Subscribed to event. You will notified over DMs').then(r => r.delete(300000));
+        //                 });
+        //             }
+        //         });
+        //     }
+        // }
         }else{
             return message.channel.send('That is not a valid command');
         }

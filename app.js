@@ -32,6 +32,7 @@ client.on('ready', () => {
             url: "https://www.youtube.com/watch?v=FeohkopWEn4"
         }
     });
+    // dailyCheck();
 });
 
 client.on("message",(message) => {
@@ -121,7 +122,7 @@ schedule.scheduleJob('daily-schedule','0 0 * * *', () => {
       if(jobName != 'daily-schedule'){
           var job = 'jobList.' + jobName;
           eval(job+'.cancel()');
-          console.log(job+' removed.');
+        //   console.log(job+' removed.');
       }
     }
     dailyCheck();
@@ -130,11 +131,15 @@ schedule.scheduleJob('daily-schedule','0 0 * * *', () => {
 function dailyCheck(){
     const dayNow        = moment().format('dddd');
     const dateNow       = moment().format("YYYY-MM-DD HH:mm:ss");
-    console.log(schedule);
+    // console.log(schedule);
     con.query("SELECT * FROM pa_events WHERE  date='"+dayNow+"' OR date='"+dateNow+"'", function (err, result) {
         if (err) throw err;
         hourlyCheck(result);
     });
+    // con.query("SELECT * FROM pa_events WHERE  date='Sunday'", function (err, result) {
+    //     if (err) throw err;
+    //     hourlyCheck(result);
+    // });
 }
 
 function hourlyCheck(result){
@@ -143,70 +148,105 @@ function hourlyCheck(result){
         var res = time.split(" ");
         var date = moment().format("YYYY-MM-DD").toString();
         var dt = moment(res[0], ["hA"]).format("HH");
-        if(res[1] == "PST"){
-            var currentTimeinPST = moment(date+' '+dt+':00 +0000', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
-            var transformToCET = moment(date+' '+currentTimeinPST+' -0900', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
-            var transformToUTC = moment(date+' '+currentTimeinPST+' -0800', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
-            var hourInUTC = moment(date+' '+currentTimeinPST+' +0800', "YYYY-MM-DD HH:mm Z").utc().format('HH');
+        // console.log(result);
+        // if(res[1] == "PST"){
+        //     // var currentTimeinPST = moment(date+' '+dt+':00 +0000', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
+        //     // var transformToCET = moment(date+' '+currentTimeinPST+' -0900', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
+        //     // var transformToUTC = moment(date+' '+currentTimeinPST+' -0800', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
+        //     console.log(dt);
+        //     console.log(date);
+        //     var usTime = momentZone.tz(date+' '+dt,'America/Los_Angeles');
+        //     var euTime = usTime.tz("Europe/Berlin").format('HH:mm');
+        //     var utcTime = usTime.utc().format('HH:mm');
+        //     usTime = usTime.format('HH:mm');
+        //     var currentTimeinPST = moment(date+' '+dt+':00 +0000', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
+        //     var transformToCET = moment(date+' '+currentTimeinPST+' -0900', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
+        //     var transformToUTC = moment(date+' '+currentTimeinPST+' -0800', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
 
-            // var currentTimePST = moment(date+' '+dt+':00 -0800', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
-            // var currentTimeCET = moment(date+' '+dt+':00 +0100', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
-            // var currentTimeUTC = moment(date+' '+dt+':00 +0000', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
-            console.log(element.title + '; PST TIME: ' + currentTimeinPST + '; UTC TIME: '+ transformToUTC + '; CET TIME: '+ transformToCET);
-            var rule = new schedule.RecurrenceRule();
-            rule.hour = hourInUTC;
-            rule.minute = 0;
+        //     var hourInUTC = moment(date+' '+currentTimeinPST+' +0800', "YYYY-MM-DD HH:mm Z").utc().format('HH');
 
-            schedule.scheduleJob('DBEntry'+element.id,rule, function(){
-                const eventEmbed = new Discord.RichEmbed()
-                        .setColor('#0099ff')
-                        .setTitle('#'+element.id+' '+element.title)
-                        .addField('Time PST',currentTimeinPST,true)
-                        .addField('Time CET',transformToCET,true)
-                        .addField('Time UTC',transformToUTC,true)
-                        .addField('Date',element.date,true)
-                        .addField('Location',element.location,true);
-                client.channels.get('663469227683872787').send(eventEmbed);
-                console.log(schedule);
-            });
-        }else if(res[1] == "CET"){
-            var currentTimeinCET = moment(date+' '+dt+':00 +0000', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
-            var transformToPST = moment(date+' '+currentTimeinCET+' +0900', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
-            var transformToUTC = moment(date+' '+currentTimeinCET+' +0100', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
-            var hourInUTC = moment(date+' '+currentTimeinCET+' +0100', "YYYY-MM-DD HH:mm Z").utc().format('HH');
+        //     // var currentTimePST = moment(date+' '+dt+':00 -0800', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
+        //     // var currentTimeCET = moment(date+' '+dt+':00 +0100', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
+        //     // var currentTimeUTC = moment(date+' '+dt+':00 +0000', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
+        //     console.log(element.title + '; PST TIME: ' + currentTimeinPST + '; UTC TIME: '+ transformToUTC + '; CET TIME: '+ transformToCET);
+        //     var rule = new schedule.RecurrenceRule();
+        //     rule.hour = hourInUTC;
+        //     rule.minute = 0;
 
-            // var timeInUTC = moment(date+' '+dt+':00 +0000', "YYYY-MM-DD HH:mm Z").utc().format('HH');
-            // var currentTimePST = moment(date+' '+dt+':00 -0800', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
-            // var currentTimeCET = moment(date+' '+dt+':00 +0100', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
-            // var currentTimeUTC = moment(date+' '+dt+':00 +0000', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
-            console.log(element.title + '; CET TIME: ' + currentTimeinCET + '; UTC TIME: '+ transformToUTC + '; PST TIME: '+ transformToPST);
-            var rule = new schedule.RecurrenceRule();
-            rule.hour = hourInUTC;
-            rule.minute = 0;
+        //     // schedule.scheduleJob('DBEntry'+element.id,rule, function(){
+        //     //     const eventEmbed = new Discord.RichEmbed()
+        //     //             .setColor('#0099ff')
+        //     //             .setTitle('#'+element.id+' '+element.title)
+        //     //             .addField('Time PST',currentTimeinPST,true)
+        //     //             .addField('Time CET',transformToCET,true)
+        //     //             .addField('Time UTC',transformToUTC,true)
+        //     //             .addField('Date',element.date,true)
+        //     //             .addField('Location',element.location,true);
+        //     //     client.channels.get('663469227683872787').send(eventEmbed);
+        //     //     console.log(schedule);
+        //     // });
 
-            schedule.scheduleJob('DBEntry'+element.id,rule, function(){
-                const eventEmbed = new Discord.RichEmbed()
-                        .setColor('#0099ff')
-                        .setTitle('#'+element.id+' '+element.title)
-                        .addField('Time PST',transformToPST,true)
-                        .addField('Time CET',currentTimeinCET,true)
-                        .addField('Time UTC',transformToUTC,true)
-                        .addField('Date',element.date,true)
-                        .addField('Location',element.location,true);
-                client.channels.get('663469227683872787').send(eventEmbed);
-                console.log(schedule);
-            });
-        }else if(res[1] == "UTC"){
+
+        //     // schedule.scheduleJob('DBEntry'+element.id,rule, function(){
+        //         const eventEmbed = new Discord.RichEmbed()
+        //                 .setColor('#0099ff')
+        //                 .setTitle('#'+element.id+' '+element.title)
+        //                 .addField('US Time',usTime,true)
+        //                 .addField('EU Time',euTime,true)
+        //                 .addField('UTC Time',utcTime,true)
+        //                 .addField('Time PST',currentTimeinPST,true)
+        //                 .addField('Time CET',transformToCET,true)
+        //                 .addField('Time UTC',transformToUTC,true)
+        //                 .addField('Date',element.date,true)
+        //                 .addField('Location',element.location,true);
+        //         client.channels.get('671028749113753639').send(eventEmbed);
+        //         console.log(schedule);
+        //     // });
+        // }else if(res[1] == "CET"){
+
+
+        //     var currentTimeinCET = moment(date+' '+dt+':00 +0000', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
+        //     var transformToPST = moment(date+' '+currentTimeinCET+' +0900', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
+        //     var transformToUTC = moment(date+' '+currentTimeinCET+' +0100', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
+        //     var hourInUTC = moment(date+' '+currentTimeinCET+' +0100', "YYYY-MM-DD HH:mm Z").utc().format('HH');
+
+        //     // var timeInUTC = moment(date+' '+dt+':00 +0000', "YYYY-MM-DD HH:mm Z").utc().format('HH');
+        //     // var currentTimePST = moment(date+' '+dt+':00 -0800', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
+        //     // var currentTimeCET = moment(date+' '+dt+':00 +0100', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
+        //     // var currentTimeUTC = moment(date+' '+dt+':00 +0000', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
+        //     console.log(element.title + '; CET TIME: ' + currentTimeinCET + '; UTC TIME: '+ transformToUTC + '; PST TIME: '+ transformToPST);
+        //     var rule = new schedule.RecurrenceRule();
+        //     rule.hour = hourInUTC;
+        //     rule.minute = 0;
+
+        //     schedule.scheduleJob('DBEntry'+element.id,rule, function(){
+        //         const eventEmbed = new Discord.RichEmbed()
+        //                 .setColor('#0099ff')
+        //                 .setTitle('#'+element.id+' '+element.title)
+        //                 .addField('Time PST',transformToPST,true)
+        //                 .addField('Time CET',currentTimeinCET,true)
+        //                 .addField('Time UTC',transformToUTC,true)
+        //                 .addField('Date',element.date,true)
+        //                 .addField('Location',element.location,true);
+        //         client.channels.get('663469227683872787').send(eventEmbed);
+        //         console.log(schedule);
+        //     });
+        // }else if(res[1] == "UTC"){
+            var utcTime = momentZone.utc(date+' '+dt);
+            var usTime = momentZone(utcTime).tz('America/Los_Angeles').format('ha z');
+            var euTime = momentZone(utcTime).tz("Europe/Paris").format('HH:mm z');
+            utcTime = utcTime.format('ha z');
+
             var currentTimeinUTC = moment(date+' '+dt+':00 +0000', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
-            var transformToPST = moment(date+' '+currentTimeinUTC+' +0800', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
-            var transformToCET = moment(date+' '+currentTimeinUTC+' -0100', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
+            // var transformToPST = moment(date+' '+currentTimeinUTC+' +0800', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
+            // var transformToCET = moment(date+' '+currentTimeinUTC+' -0100', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
             var hourInUTC = moment(date+' '+currentTimeinUTC+' +0000', "YYYY-MM-DD HH:mm Z").utc().format('HH');
 
             // var timeInUTC = moment(date+' '+dt+':00 +0000', "YYYY-MM-DD HH:mm Z").utc().format('HH');
             // var currentTimePST = moment(date+' '+dt+':00 -0800', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
             // var currentTimeCET = moment(date+' '+dt+':00 +0100', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
             // var currentTimeUTC = moment(date+' '+dt+':00 +0000', "YYYY-MM-DD HH:mm Z").utc().format('HH:mm');
-            console.log(element.title + '; UTC TIME: ' + currentTimeinUTC + '; CET TIME: ' + transformToCET + '; PST TIME: ' + transformToPST);
+            // console.log(element.title + '; UTC TIME: ' + currentTimeinUTC + '; CET TIME: ' + transformToCET + '; PST TIME: ' + transformToPST);
             var rule = new schedule.RecurrenceRule();
             rule.hour = hourInUTC;
             rule.minute = 0;
@@ -215,18 +255,33 @@ function hourlyCheck(result){
                 const eventEmbed = new Discord.RichEmbed()
                         .setColor('#0099ff')
                         .setTitle('#'+element.id+' '+element.title)
-                        .addField('Time PST',transformToPST,true)
-                        .addField('Time CET',transformToCET,true)
-                        .addField('Time UTC',currentTimeinUTC,true)
+                        .addField('Universal Time',utcTime,true)
+                        .addField('United States',usTime,true)
+                        .addField('Europe',euTime,true)
                         .addField('Date',element.date,true)
                         .addField('Location',element.location,true);
-                client.channels.get('663469227683872787').send(eventEmbed);
-                console.log(schedule);
-            });
-        }else{
-            console.log('idk');
-        }
+                client.channels.get(config.discord.dev.channel.events).send(eventEmbed);
 
+                // Subscriber notifications
+                con.query("SELECT * FROM pa_events "+ 
+                "LEFT JOIN pa_events_subs ON pa_events_subs.events_id = pa_events.id "+
+                "LEFT JOIN pa_subs ON pa_subs.id = pa_events_subs.subs_id "+
+                "WHERE pa_events.id='"+element.id+"'", function (err, result) {
+                    if (err) throw err;
+                    result.forEach(element => {
+                        client.fetchUser(element.user_id).then((user) => {
+                            user.send('Hopefully we see you there today!');
+                            user.send(eventEmbed);
+                        });
+                    });
+                });
+                // console.log(schedule);
+            });
+
+
+        // }else{
+        //     console.log('idk');
+        // }
     });
 }
 
